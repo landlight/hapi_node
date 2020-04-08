@@ -1,0 +1,25 @@
+{
+  "name": "hapi_node",
+  "version": "1.0.0",
+  "description": "assignment_pomelo_fashion",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha --timeout 10000",
+    "start": "nodemon server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/landlight/hapi_node.git"
+  },
+  "author": "Chit Khine",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/landlight/hapi_node/issues"
+  },
+  "homepage": "https://github.com/landlight/hapi_node#readme",
+  "dependencies": {
+    "@hapi/hapi": "18.3.1",
+    "hapi-swagger": "^13.0.0",
+    "nodemon": "^2.0.2"
+  }
+}
