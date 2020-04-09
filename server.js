@@ -1,11 +1,26 @@
 'use strict';
 const Hapi = require('@hapi/hapi');
+const Inert = require('@hapi/inert');
+const Vision = require('@hapi/vision');
+const HapiSwagger = require('hapi-swagger');
+const Joi = require('@hapi/joi');
+const Wreck = require('@hapi/wreck');
 
+const wreck = Wreck.defaults({
+    headers: { 'User-Agent': 'node.js' }
+});
 
 const server = Hapi.server({
     port: 3000,
     host: 'localhost'
 });
+
+const swaggerOptions = {
+    info: {
+        title: 'Pomelo Assignment Documentation',
+        version: '0.0.1',
+    },
+};
 
 /**
  * Assignment 1
@@ -14,15 +29,20 @@ const server = Hapi.server({
 server.route({
     method: 'POST',
     path: '/assignment1',
-    handler: (request, reply) => {
-        try {
-            const payload = request.payload;
-            transformJson(payload);
-            return transformJson(payload);
-        } catch(err) {
-            throw new Error(err);
-        }
-    }
+    options: {
+        handler: (req, reply) => {
+            try {
+                const payload = req.payload;
+                transformJson(payload);
+                return transformJson(payload);
+            } catch(err) {
+                throw new Error(err);
+            }
+        },
+        description: 'Assignment 1',
+        notes: 'Transform json',
+        tags: ['api'],
+    },
 });
 
 /**
@@ -34,19 +54,72 @@ server.route({
 server.route({
     method: 'GET',
     path: '/assignment2',
-    handler: (request, reply) => {
+    options: {
+        handler: async (req, reply) => {
+            try {
+                const query = req.query;
+                let page = 1;
+                if (query && query.page > 1) {
+                    page = query.page;
+                } 
+                try {
+                    const results = await getGitSearchResults();
+                    
+                    if (!results) {
+                        console.log('results');
+                    } else {
+                        let items = results.items;
+                        return items;
+                    }
+                } catch (err) {
+                    return err;
+                } 
+            } catch(err) {
+                throw new Error(err);
+            }
+        },
+        description: 'Assignment 2',
+        notes: 'Pagination for Github Search API',
+        tags: ['api'],
+        validate: {
+            query: Joi.object({page: Joi.number()})
+        }
+    },
+})
+
+server.route({
+    method: 'GET',
+    path: '/',
+    handler: async (req, reply) => {
         try {
-            const query = request.query;
+            const query = req.query;
             let page = 1;
             if (query && query.page > 1) {
                 page = query.page;
             } 
-            return page;   
+            try {
+                const results = await getGitSearchResults(page);
+                
+                if (!results) {
+                    console.log('results');
+                } else {
+                    let items = results.items;
+                    let totalPage = parseInt(results.total_count / 10);
+
+                    return reply.view('index.html', {
+                        totalPage: totalPage,
+                        items: items,
+                        currentPage: page
+                    });
+                }
+            } catch (err) {
+                return err;
+            } 
         } catch(err) {
             throw new Error(err);
-        }
+        };
     }
-})
+});
 
 const transformJson = (inputJson) => {
     try {
@@ -83,10 +156,36 @@ const recursiveAdd = (result, onelayer) => {
     return result;
 }
 
+// call gitsearch api
+const getGitSearchResults = async (page) => {
+    let url = `https://api.github.com/search/repositories?q=nodejs&page=${page}&per_page=10`
+    console.log(url, "url");
+    const { res, payload } = await wreck.get(url);
+    return JSON.parse(payload);
+}
+
 async function start () {  
     // start your server
     try {
-      await server.start();
+        await server.register([
+            Inert,
+            Vision,
+            {
+                plugin: HapiSwagger,
+                options: swaggerOptions
+            }
+        ]);
+      
+        server.views({
+            engines: {
+                html: {
+                    module: require('handlebars'),
+                    compileMode: 'sync' // engine specific
+                }
+            },
+            compileMode: 'async' // global setting
+        });
+        await server.start();
     } catch (err) {
       console.error(err);
       process.exit(1);

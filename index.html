@@ -1,0 +1,51 @@
+<html>
+    <head>
+    </head>
+    <body>
+        TotalPage :{{totalPage}}, Go To Page: <input id="pageNumber" type=number></input> <button onclick="goToPage()"> Go</button> Current Page: {{currentPage}}
+
+        <table style="width:100%">
+        <tr>
+            <th>Id</th>
+            <th>Name</th>
+            <th>Full Name</th>
+            <th>Score</th>
+            <th>Forks</th>
+        </tr>
+        {{#each items}}
+          <tr>  
+            <td>{{this.id}}</td>
+            <td>{{this.name}}</td>
+            <td>{{this.full_name}}</td>
+            <td>{{this.forks}}</td>
+            <td>{{this.score}}</td>   
+          </tr>
+        {{/each}}
+        </table>
+    </body>
+</html>
+
+<style>
+table, th, td {
+    border: 1px solid black;
+}
+</style>
+
+<script>
+    function goToPage() {
+        let pageNumber = document.getElementById('pageNumber').value;
+        if (!pageNumber) {
+            alert("Please input the page number");
+        } else { 
+            var url = window.location.href;    
+            if (url.indexOf('?page') > -1){
+                console.log(url, "url");
+                url = `http://localhost:3000?page=${pageNumber}`;
+            }else{
+                url += `?page=${pageNumber}`
+            }
+            console.log(url, "url");
+            window.location.href = url;
+        }
+    }
+</script>
