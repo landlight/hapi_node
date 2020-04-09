@@ -40,7 +40,7 @@ table, th, td {
             var url = window.location.href;    
             if (url.indexOf('?page') > -1){
                 console.log(url, "url");
-                url = `http://localhost:3000?page=${pageNumber}`;
+                url = `http://localhost:3000/assignment2?page=${pageNumber}`;
             }else{
                 url += `?page=${pageNumber}`
             }

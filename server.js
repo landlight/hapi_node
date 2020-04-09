@@ -63,20 +63,26 @@ server.route({
                     page = query.page;
                 } 
                 try {
-                    const results = await getGitSearchResults();
+                    const results = await getGitSearchResults(page);
                     
                     if (!results) {
                         console.log('results');
                     } else {
                         let items = results.items;
-                        return items;
+                        let totalPage = parseInt(results.total_count / 10);
+
+                        return reply.view('index.html', {
+                            totalPage: totalPage,
+                            items: items,
+                            currentPage: page
+                        });
                     }
                 } catch (err) {
                     return err;
                 } 
             } catch(err) {
                 throw new Error(err);
-            }
+            };
         },
         description: 'Assignment 2',
         notes: 'Pagination for Github Search API',
@@ -84,42 +90,16 @@ server.route({
         validate: {
             query: Joi.object({page: Joi.number()})
         }
-    },
-})
-
-server.route({
-    method: 'GET',
-    path: '/',
-    handler: async (req, reply) => {
-        try {
-            const query = req.query;
-            let page = 1;
-            if (query && query.page > 1) {
-                page = query.page;
-            } 
-            try {
-                const results = await getGitSearchResults(page);
-                
-                if (!results) {
-                    console.log('results');
-                } else {
-                    let items = results.items;
-                    let totalPage = parseInt(results.total_count / 10);
-
-                    return reply.view('index.html', {
-                        totalPage: totalPage,
-                        items: items,
-                        currentPage: page
-                    });
-                }
-            } catch (err) {
-                return err;
-            } 
-        } catch(err) {
-            throw new Error(err);
-        };
     }
 });
+
+server.route({
+    method:'GET',
+    path:'/',
+    handler: function (req, reply) {
+        return "Testing hapi with mocha and chai";
+      }
+})
 
 const transformJson = (inputJson) => {
     try {
@@ -159,7 +139,6 @@ const recursiveAdd = (result, onelayer) => {
 // call gitsearch api
 const getGitSearchResults = async (page) => {
     let url = `https://api.github.com/search/repositories?q=nodejs&page=${page}&per_page=10`
-    console.log(url, "url");
     const { res, payload } = await wreck.get(url);
     return JSON.parse(payload);
 }
@@ -192,5 +171,6 @@ async function start () {
     }
     console.log('Server running');
 }
-  
 start();
+
+module.exports = server;
